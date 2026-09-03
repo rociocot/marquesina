@@ -31,6 +31,11 @@ public class ConfiguracionTv {
 
     private String imagenUrl;
 
+    @Enumerated(EnumType.STRING)
+    private TipoFondo tipoFondo; // COLOR o IMAGEN
+
+    private String colorFondoHex;
+
     @Column(columnDefinition = "TEXT")
     private String estiloCssCustom;
 
