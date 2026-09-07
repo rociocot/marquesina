@@ -31,4 +31,4 @@ El backend está construido bajo una arquitectura en capas:
 - [x] **Módulo 2.1 - 2.2:** Modelo de dominio (`Producto`, `ConfiguracionTv`, `TipoFondo`).
 - [x] **Módulo 2.3:** Repositorios JPA (`ProductoRepository`, `ConfiguracionTvRepository`).
 - [x] **Módulo 2.4:** Capa de Servicios (`ProductoService`, `ConfiguracionTvService`).
-- [ ] **Módulo 2.5:** Controladores REST para el panel de administración y pantalla.
+- [x] **Módulo 2.5:** Controladores REST para el panel de administración y pantalla.
