@@ -31,5 +31,7 @@ public class Producto {
     private Boolean disponible;
 
     private Integer asignadoTv;
+
+    private String colorTarjeta;
 }
 

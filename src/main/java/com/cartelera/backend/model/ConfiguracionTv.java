@@ -39,4 +39,11 @@ public class ConfiguracionTv {
     @Column(columnDefinition = "TEXT")
     private String estiloCssCustom;
 
+    @Enumerated(EnumType.STRING)
+    private Orientacion orientacion; //VERTICAL - HORIZONTAL
+
+    private Integer productosPorPagina = 3; // Valor por defecto
+
+    private Integer tiempoRotacionSegundos = 10;
+
 }
