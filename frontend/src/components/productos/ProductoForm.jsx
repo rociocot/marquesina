@@ -8,24 +8,25 @@ import OpcionesFondo from './OpcionesFondo';
 const COLOR_HEX_INICIAL = '#1a252c';
 const COLOR_TEXTO_INICIAL = '#ffffff';
 
-export default function ProductoForm() {
-  const [nombre, setNombre] = useState('Agua mineral');
-  const [descripcion, setDescripcion] = useState('300 ml');
-  const [precio, setPrecio] = useState('1500');
+export default function ProductoForm({ productoExistente, onGuardadoExitoso }) {
+  // Si productoExistente tiene datos, los cargamos; si no, usamos tus valores por defecto de creación
+  const [nombre, setNombre] = useState(productoExistente ? productoExistente.nombre : 'Agua mineral');
+  const [descripcion, setDescripcion] = useState(productoExistente ? productoExistente.descripcion : '300 ml');
+  const [precio, setPrecio] = useState(productoExistente ? productoExistente.precio.toString() : '1500');
   
   // Nuevos estados para Estilo y Texto
-  const [colorTarjeta, setColorTarjeta] = useState(COLOR_HEX_INICIAL);
-  const [colorTexto, setColorTexto] = useState(COLOR_TEXTO_INICIAL);
-  const [fuenteSeleccionada, setFuenteSeleccionada] = useState('Arial, sans-serif');
-  const [posicionTexto, setPosicionTexto] = useState('center');
+  const [colorTarjeta, setColorTarjeta] = useState(productoExistente ? productoExistente.colorTarjeta : COLOR_HEX_INICIAL);
+  const [colorTexto, setColorTexto] = useState(productoExistente ? productoExistente.colorTexto : COLOR_TEXTO_INICIAL);
+  const [fuenteSeleccionada, setFuenteSeleccionada] = useState(productoExistente ? productoExistente.fuenteSeleccionada : 'Arial, sans-serif');
+  const [posicionTexto, setPosicionTexto] = useState(productoExistente ? productoExistente.posicionTexto : 'center');
   
   const [imagenFondo, setImagenFondo] = useState(null);
-  const [vistaPreviaFondo, setVistaPreviaFondo] = useState(null);
+  const [vistaPreviaFondo, setVistaPreviaFondo] = useState(productoExistente ? productoExistente.imagenFondoUrl : null);
 
   const [imagenProducto, setImagenProducto] = useState(null);
-  const [vistaPreviaProducto, setVistaPreviaProducto] = useState(null);
+  const [vistaPreviaProducto, setVistaPreviaProducto] = useState(productoExistente ? productoExistente.imagenUrl : null);
   
-  const [asignadoTv, setAsignadoTv] = useState(1);
+  const [asignadoTv, setAsignadoTv] = useState(productoExistente ? productoExistente.asignadoTv : 1);
   const [cargando, setCargando] = useState(false);
   const [mensajeEstadoIA, setMensajeEstadoIA] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -46,7 +47,7 @@ export default function ProductoForm() {
   };
 
   const handleQuitarFondoIA = async () => {
-    if (!imagenProducto) {
+    if (!vistaPreviaProducto) {
       alert('Primero selecciona una imagen de producto.');
       return;
     }
@@ -55,7 +56,13 @@ export default function ProductoForm() {
       setCargando(true);
       setMensajeEstadoIA('Iniciando IA (procesando en navegador)...');
       
-      const blobProcesado = await removeBackground(imagenProducto);
+      let sourceParaIa = imagenProducto;
+      if (!sourceParaIa && productoExistente?.imagenUrl) {
+        const res = await fetch(productoExistente.imagenUrl);
+        sourceParaIa = await res.blob();
+      }
+
+      const blobProcesado = await removeBackground(sourceParaIa);
       const archivoPng = new File([blobProcesado], 'sin-fondo.png', { type: 'image/png' });
       
       setImagenProducto(archivoPng);
@@ -80,23 +87,32 @@ export default function ProductoForm() {
         nombre,
         descripcion,
         precio: precio ? parseFloat(precio) : 0,
-        disponible: true,
+        disponible: productoExistente ? productoExistente.disponible : true,
         asignadoTv: parseInt(asignadoTv),
         colorTarjeta,
         colorTexto,
         fuenteSeleccionada,
         posicionTexto,
-        imagenUrl: '',
-        imagenFondoUrl: ''
+        imagenUrl: productoExistente ? productoExistente.imagenUrl : '',
+        imagenFondoUrl: productoExistente ? productoExistente.imagenFondoUrl : ''
       };
 
       formData.append('producto', new Blob([JSON.stringify(productoDTO)], { type: 'application/json' }));
       if (imagenFondo) formData.append('imagenFondo', imagenFondo);
       if (imagenProducto) formData.append('imagenProducto', imagenProducto);
 
-      await axios.post('http://localhost:8080/api/productos', formData);
-      alert('¡Producto guardado con éxito!');
+      if (productoExistente) {
+        // Si estamos editando, usamos PUT con el ID correspondiente
+        await axios.put(`http://localhost:8080/api/productos/${productoExistente.id}`, formData);
+        alert('¡Producto actualizado con éxito!');
+      } else {
+        // Si es nuevo, usamos POST
+        await axios.post('http://localhost:8080/api/productos', formData);
+        alert('¡Producto guardado con éxito!');
+      }
+
       setModalAbierto(false);
+      if (onGuardadoExitoso) onGuardadoExitoso();
     } catch (error) {
       console.error(error);
       alert('Error al guardar el producto.');
@@ -141,7 +157,9 @@ export default function ProductoForm() {
       
       {/* Columna Izquierda: Formulario */}
       <div style={{ width: '50%', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#121212', padding: '24px', borderRadius: '12px', border: '1px solid #262626', boxSizing: 'border-box', height: 'fit-content' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', borderBottom: '1px solid #404040', paddingBottom: '8px', margin: 0 }}>Gestión de Producto</h2>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', borderBottom: '1px solid #404040', paddingBottom: '8px', margin: 0 }}>
+          {productoExistente ? 'Editar Producto' : 'Gestión de Producto'}
+        </h2>
 
         <CamposTexto 
           nombre={nombre} setNombre={setNombre}
@@ -166,7 +184,7 @@ export default function ProductoForm() {
             display: 'inline-block', 
             padding: '8px 12px', 
             backgroundColor: '#262626', 
-            color: '#ffffff', /* <-- Modifica aquí el color de la letra si lo deseas */
+            color: '#ffffff', 
             borderRadius: '6px', 
             cursor: 'pointer', 
             fontSize: '0.85rem',
@@ -196,7 +214,7 @@ export default function ProductoForm() {
             display: 'inline-block', 
             padding: '8px 12px', 
             backgroundColor: '#262626', 
-            color: '#ffffff', /* <-- Modifica aquí el color de la letra si lo deseas */
+            color: '#ffffff', 
             borderRadius: '6px', 
             cursor: 'pointer', 
             fontSize: '0.85rem',
@@ -271,7 +289,7 @@ export default function ProductoForm() {
           onClick={ejecutarGuardado}
           style={{ padding: '12px', backgroundColor: '#059669', color: '#fff', fontWeight: 'bold', borderRadius: '8px', border: 'none', cursor: 'pointer', opacity: cargando ? 0.5 : 1 }}
         >
-          {cargando ? 'Guardando...' : 'Guardar y Publicar en TV'}
+          {cargando ? 'Guardando...' : (productoExistente ? 'Actualizar Producto' : 'Guardar y Publicar en TV')}
         </button>
       </div>
 
