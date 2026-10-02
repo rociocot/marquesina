@@ -24,8 +24,9 @@ public class Producto {
 
     private BigDecimal precio;
 
-    @Column(nullable=false)
     private String imagenUrl;
+
+    private String imagenFondoUrl;
 
     @Column(nullable = false)
     private Boolean disponible;
@@ -33,5 +34,11 @@ public class Producto {
     private Integer asignadoTv;
 
     private String colorTarjeta;
+
+    private String colorTexto;
+
+    private String fuenteSeleccionada;
+
+    private String posicionTexto;
 }
 

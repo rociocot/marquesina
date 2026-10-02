@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -38,14 +39,18 @@ public class ProductoController {
     }
 
     @PostMapping
-    public ResponseEntity<Producto> guardar(@RequestBody Producto producto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(productoService.guardar(producto));
+    public ResponseEntity<Producto> guardar(@RequestPart("producto") Producto producto,
+                                            @RequestPart(value = "imagenProducto", required = false) MultipartFile imagenProducto,
+                                            @RequestPart(value = "imagenFondo", required = false) MultipartFile imagenFondo)
+    {
+        return ResponseEntity.status(HttpStatus.CREATED).body(productoService.guardarConArchivos(producto, imagenProducto, imagenFondo));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Producto> modificar(@PathVariable Long id, @RequestBody Producto producto) {
-        producto.setId(id);
-        return ResponseEntity.ok(productoService.modificar(producto));
+    public ResponseEntity<Producto> modificar(@PathVariable Long id, @RequestPart Producto producto,
+                                              @RequestPart(value = "imagenProducto", required = false) MultipartFile imagenProducto,
+                                              @RequestPart(value = "imagenFondo", required = false) MultipartFile imagenFondo) {
+        return ResponseEntity.ok(productoService.modificarConArchivos(id, producto, imagenProducto, imagenFondo));
     }
 
     @DeleteMapping("/{id}")
